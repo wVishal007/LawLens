@@ -1,10 +1,11 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
+import axios from 'axios'
 
 interface User {
   id: string
   name: string
   email: string
-  createdAt: string
+  createdAt?: string
 }
 
 interface AuthState {
@@ -21,31 +22,32 @@ const initialState: AuthState = {
   error: null
 }
 
-// Async thunks for auth actions
+// API base URL
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api"
+
+// ---------------- Login ----------------
 export const loginUser = createAsyncThunk(
   'auth/login',
-  async ({ email, password }: { email: string; password: string }) => {
-    // Placeholder for API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    return {
-      id: '1',
-      name: 'John Doe',
-      email,
-      createdAt: new Date().toISOString()
+  async ({ email, password }: { email: string; password: string }, { rejectWithValue }) => {
+    try {
+      const { data } = await axios.post(`${API_URL}/user/login`, { email, password })
+      localStorage.setItem("token", data.token) // Save JWT
+      return data.user
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || "Login failed")
     }
   }
 )
 
+// ---------------- Signup ----------------
 export const signupUser = createAsyncThunk(
   'auth/signup',
-  async ({ name, email, password }: { name: string; email: string; password: string }) => {
-    // Placeholder for API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    return {
-      id: '1',
-      name,
-      email,
-      createdAt: new Date().toISOString()
+  async ({ name, email, password, gender }: { name: string; email: string; password: string; gender?: string }, { rejectWithValue }) => {
+    try {
+      const { data } = await axios.post(`${API_URL}/user/register`, { name, email, password, gender })
+      return data.user
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || "Signup failed")
     }
   }
 )
@@ -58,6 +60,7 @@ const authSlice = createSlice({
       state.user = null
       state.isAuthenticated = false
       state.error = null
+      localStorage.removeItem("token")
     },
     clearError: (state) => {
       state.error = null
@@ -77,7 +80,7 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false
-        state.error = action.error.message || 'Login failed'
+        state.error = action.payload as string
       })
       // Signup cases
       .addCase(signupUser.pending, (state) => {
@@ -91,7 +94,7 @@ const authSlice = createSlice({
       })
       .addCase(signupUser.rejected, (state, action) => {
         state.isLoading = false
-        state.error = action.error.message || 'Signup failed'
+        state.error = action.payload as string
       })
   }
 })

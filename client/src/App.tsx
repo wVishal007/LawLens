@@ -29,15 +29,13 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 }
 
 // Layout Component for authenticated pages
+// Layout Component for authenticated pages
 const AuthenticatedLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       <div className="flex">
-        <div className="hidden md:block">
-          <Sidebar />
-        </div>
-        <Sidebar /> {/* Mobile sidebar */}
+        <Sidebar /> {/* Render once, Sidebar handles mobile vs desktop */}
         <main className="flex-1">
           {children}
         </main>
@@ -45,6 +43,7 @@ const AuthenticatedLayout: React.FC<{ children: React.ReactNode }> = ({ children
     </div>
   )
 }
+
 
 // App Routes Component
 const AppRoutes: React.FC = () => {
